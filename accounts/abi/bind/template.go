@@ -96,6 +96,7 @@ import (
 	"github.com/chislab/go-fiscobcos/common"
 	"github.com/chislab/go-fiscobcos/core/types"
 	"github.com/chislab/go-fiscobcos/event"
+	"github.com/chislab/go-fiscobcos/common/hexutil"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -158,6 +159,7 @@ var (
 	  {{.Type}}Caller     // Read-only binding to the contract
 	  {{.Type}}Transactor // Write-only binding to the contract
 	  {{.Type}}Filterer   // Log filterer for contract events
+		ABI abi.ABI // contract abi
 	}
 
 	// {{.Type}}Caller is an auto generated read-only Go binding around an FiscoBcos contract.
@@ -340,7 +342,7 @@ var (
 		// Solidity: {{formatmethod .Original $structs}}
 
 		/******************************************************************************************************************************/
-		func (_{{$contract.Type}} *{{$contract.Type}}Caller) Read{{.Normalized.Name}}(output []byte) ({{if .Structured}}struct{ {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}};{{end}} },{{else}}{{range .Normalized.Outputs}}{{bindtype .Type $structs}},{{end}}{{end}} error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}Caller) Read{{.Normalized.Name}}(output string) ({{if .Structured}}struct{ {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}};{{end}} },{{else}}{{range .Normalized.Outputs}}{{bindtype .Type $structs}},{{end}}{{end}} error) {
 			{{if .Structured}}ret := new(struct{
 				{{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}}
 				{{end}}
@@ -352,21 +354,21 @@ var (
 				{{range $i, $_ := .Normalized.Outputs}}ret{{$i}},
 				{{end}}
 			}{{end}}{{end}}
-			err := _{{$contract.Type}}.contract.ReadCall(out, "{{.Original.Name}}", output)
+			err := _{{$contract.Type}}.contract.ReadCall(out, "{{.Original.Name}}", hexutil.MustDecode(output))
 			return {{if .Structured}}*ret,{{else}}{{range $i, $_ := .Normalized.Outputs}}*ret{{$i}},{{end}}{{end}} err
 		}
 
 		// {{.Normalized.Name}} is a free data retrieval call binding the contract method 0x{{printf "%x" .Original.ID}}.
 		//
 		// Solidity: {{formatmethod .Original $structs}}
-		func (_{{$contract.Type}} *{{$contract.Type}}Session) Read{{.Normalized.Name}}(output []byte) ({{if .Structured}}struct{ {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}};{{end}} }, {{else}} {{range .Normalized.Outputs}}{{bindtype .Type $structs}},{{end}} {{end}} error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}Session) Read{{.Normalized.Name}}(output string) ({{if .Structured}}struct{ {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}};{{end}} }, {{else}} {{range .Normalized.Outputs}}{{bindtype .Type $structs}},{{end}} {{end}} error) {
 		  return _{{$contract.Type}}.Contract.Read{{.Normalized.Name}}(output)
 		}
 
 		// {{.Normalized.Name}} is a free data retrieval call binding the contract method 0x{{printf "%x" .Original.ID}}.
 		//
 		// Solidity: {{formatmethod .Original $structs}}
-		func (_{{$contract.Type}} *{{$contract.Type}}CallerSession) Read{{.Normalized.Name}}(output []byte) ({{if .Structured}}struct{ {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}};{{end}} }, {{else}} {{range .Normalized.Outputs}}{{bindtype .Type $structs}},{{end}} {{end}} error) {
+		func (_{{$contract.Type}} *{{$contract.Type}}CallerSession) Read{{.Normalized.Name}}(output string) ({{if .Structured}}struct{ {{range .Normalized.Outputs}}{{.Name}} {{bindtype .Type $structs}};{{end}} }, {{else}} {{range .Normalized.Outputs}}{{bindtype .Type $structs}},{{end}} {{end}} error) {
 		  return _{{$contract.Type}}.Contract.Read{{.Normalized.Name}}(output)
 		}
 		/******************************************************************************************************************************/

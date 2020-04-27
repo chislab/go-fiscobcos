@@ -43,7 +43,6 @@ type Transaction struct {
 	from atomic.Value
 }
 
-
 type txdata struct {
 	RandomId   uint64          `json:"randomid"    gencodec:"required"`
 	Price      *big.Int        `json:"gasPrice" gencodec:"required"`
@@ -86,8 +85,8 @@ func NewContractCreation(nonce, blockLimit uint64, amount *big.Int, gasLimit uin
 	return newTransaction(nonce, blockLimit, nil, amount, gasLimit, gasPrice, data, chainId, groupId, extraData)
 }
 
-
-func newTransaction(nonce, blockLimit uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, chainId int64, groupId int64, extraData []byte) *Transaction {	if len(data) > 0 {
+func newTransaction(nonce, blockLimit uint64, to *common.Address, amount *big.Int, gasLimit uint64, gasPrice *big.Int, data []byte, chainId int64, groupId int64, extraData []byte) *Transaction {
+	if len(data) > 0 {
 		data = common.CopyBytes(data)
 	}
 	d := txdata{
@@ -179,12 +178,12 @@ func (tx *Transaction) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-func (tx *Transaction) Data() []byte       { return common.CopyBytes(tx.data.Payload) }
-func (tx *Transaction) Gas() uint64        { return tx.data.GasLimit }
-func (tx *Transaction) GasPrice() *big.Int { return new(big.Int).Set(tx.data.Price) }
-func (tx *Transaction) Value() *big.Int    { return new(big.Int).Set(tx.data.Amount) }
-func (tx *Transaction) RandomId() uint64      { return tx.data.RandomId}
-func (tx *Transaction) CheckRandomId() bool   { return true }
+func (tx *Transaction) Data() []byte        { return common.CopyBytes(tx.data.Payload) }
+func (tx *Transaction) Gas() uint64         { return tx.data.GasLimit }
+func (tx *Transaction) GasPrice() *big.Int  { return new(big.Int).Set(tx.data.Price) }
+func (tx *Transaction) Value() *big.Int     { return new(big.Int).Set(tx.data.Amount) }
+func (tx *Transaction) RandomId() uint64    { return tx.data.RandomId }
+func (tx *Transaction) CheckRandomId() bool { return true }
 
 // To returns the recipient address of the transaction.
 // It returns nil if the transaction is a contract creation.

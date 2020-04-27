@@ -38,7 +38,6 @@ const (
 	InternalAPIVersion = "7.0.1"
 )
 
-
 // Validator defines the methods required to validate a transaction against some
 // sanity defaults as well as any underlying 4byte method database.
 //
@@ -51,7 +50,6 @@ type Validator interface {
 	// should be immediately rejected).
 	ValidateTransaction(selector *string, tx *SendTxArgs) (*ValidationMessages, error)
 }
-
 
 // Metadata about a request
 type Metadata struct {
@@ -148,7 +146,6 @@ type (
 
 var ErrRequestDenied = errors.New("request denied")
 
-
 // logDiff logs the difference between the incoming (original) transaction and the one returned from the signer.
 // it also returns 'true' if the transaction was modified, to make it possible to configure the signer not to allow
 // UI-modifications to requests
@@ -194,4 +191,3 @@ func logDiff(original *SignTxRequest, new *SignTxResponse) bool {
 	}
 	return modified
 }
-

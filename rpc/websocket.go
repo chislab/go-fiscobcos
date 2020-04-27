@@ -26,8 +26,8 @@ import (
 	"strings"
 	"sync"
 
-	mapset "github.com/deckarep/golang-set"
 	"github.com/chislab/go-fiscobcos/log"
+	mapset "github.com/deckarep/golang-set"
 	"github.com/gorilla/websocket"
 )
 

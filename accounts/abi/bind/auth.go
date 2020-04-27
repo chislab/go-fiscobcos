@@ -47,7 +47,7 @@ func NewTransactor(keyin io.Reader, passphrase string, chainId, groupId int64) (
 // an decrypted key from a keystore
 func NewKeyStoreTransactor(keystore *keystore.KeyStore, account accounts.Account, chainId, groupId int64) (*TransactOpts, error) {
 	return &TransactOpts{
-		From: account.Address,
+		From:    account.Address,
 		ChainId: chainId,
 		GroupId: groupId,
 		Signer: func(signer types.Signer, address common.Address, tx *types.Transaction) (*types.Transaction, error) {
@@ -68,7 +68,7 @@ func NewKeyStoreTransactor(keystore *keystore.KeyStore, account accounts.Account
 func NewKeyedTransactor(key *ecdsa.PrivateKey, chainId, groupId int64) *TransactOpts {
 	keyAddr := crypto.PubkeyToAddress(key.PublicKey)
 	return &TransactOpts{
-		From: keyAddr,
+		From:    keyAddr,
 		ChainId: chainId,
 		GroupId: groupId,
 		Signer: func(signer types.Signer, address common.Address, tx *types.Transaction) (*types.Transaction, error) {

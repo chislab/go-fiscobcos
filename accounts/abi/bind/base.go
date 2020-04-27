@@ -45,7 +45,7 @@ type CallOpts struct {
 	BlockNumber *big.Int        // Optional the block number on which the call should be performed
 	Context     context.Context // Network context to support cancellation and timeouts (nil = no timeout)
 
-	GroupId		int64
+	GroupId int64
 }
 
 // TransactOpts is the collection of authorization data required to create a
@@ -54,9 +54,9 @@ type CallOpts struct {
 // valid FiscoBcos transaction.
 
 type TransactOpts struct {
-	From       common.Address // FiscoBcos account to send the transaction from
-	RandomId   uint64 // RandomId to use for the transaction execution (nil = use pending state)
-	Signer     SignerFn       // Method to use for signing the transaction (mandatory)
+	From     common.Address // FiscoBcos account to send the transaction from
+	RandomId uint64         // RandomId to use for the transaction execution (nil = use pending state)
+	Signer   SignerFn       // Method to use for signing the transaction (mandatory)
 
 	Value    *big.Int // Funds to transfer along along the transaction (nil = 0 = no funds)
 	GasPrice *big.Int // Gas price to use for the transaction execution (nil = gas price oracle)
@@ -64,8 +64,8 @@ type TransactOpts struct {
 
 	Context context.Context // Network context to support cancellation and timeouts (nil = no timeout)
 
-	ChainId int64
-	GroupId int64
+	ChainId    int64
+	GroupId    int64
 	BlockLimit uint64
 }
 
@@ -137,7 +137,7 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	if err = backend.SendTransaction(opts.Context, signedTx); err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	time.Sleep(time.Second*1)
+	time.Sleep(time.Second * 1)
 	receipt, err := backend.TransactionReceipt(opts.Context, signedTx.Hash())
 	if err != nil || receipt == nil {
 		return common.Address{}, nil, nil, err

@@ -27,10 +27,10 @@ import (
 	"sync"
 	"time"
 
-	mapset "github.com/deckarep/golang-set"
 	"github.com/chislab/go-fiscobcos/accounts"
 	"github.com/chislab/go-fiscobcos/common"
 	"github.com/chislab/go-fiscobcos/log"
+	mapset "github.com/deckarep/golang-set"
 )
 
 // Minimum amount of time between cache reloads. This limit applies if the platform does

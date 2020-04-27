@@ -46,14 +46,14 @@ type Receipt struct {
 	BlockHash       common.Hash    `json:"blockHash"`
 	BlockNumber     string         `json:"blockNumber"`
 	ContractAddress common.Address `json:"contractAddress"`
-	From            common.Address         `json:"from"`
+	From            common.Address `json:"from"`
 	GasUsed         string         `json:"gasUsed"`
 	Input           string         `json:"input"`
 	Logs            []*Log         `json:"logs"`
 	Bloom           Bloom          `json:"logsBloom"`
-	Output          string 			`json:"output"`
+	Output          string         `json:"output"`
 	Status          string         `json:"status"`
-	To              common.Address         `json:"to"`
+	To              common.Address `json:"to"`
 	TxHash          common.Hash    `json:"transactionHash"`
 	TxIndex         string         `json:"transactionIndex"`
 }

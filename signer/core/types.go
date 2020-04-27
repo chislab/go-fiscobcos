@@ -73,8 +73,8 @@ type SendTxArgs struct {
 	GasPrice hexutil.Big              `json:"gasPrice"`
 	Value    hexutil.Big              `json:"value"`
 	RandomId hexutil.Uint64           `json:"randomid"`
-	ChainId int64 `json:"chain_id"`
-	GroupId int64 `json:"group_id"`
+	ChainId  int64                    `json:"chain_id"`
+	GroupId  int64                    `json:"group_id"`
 	// We accept "data" and "input" for backwards-compatibility reasons.
 	Data  *hexutil.Bytes `json:"data"`
 	Input *hexutil.Bytes `json:"input,omitempty"`

@@ -47,23 +47,22 @@ type ClientVersion struct {
 	SupportedVersion string `json:"Supported Version"`
 }
 
-
 type Block struct {
-	DbHash       string        `json:"dbHash"`
-	ExtraData    []interface{} `json:"extraData"`
-	GasLimit     string        `json:"gasLimit"`
-	GasUsed      string        `json:"gasUsed"`
-	Hash         string        `json:"hash"`
-	LogsBloom    string        `json:"logsBloom"`
-	Number       string        `json:"number"`
-	ParentHash   string        `json:"parentHash"`
-	ReceiptsRoot string        `json:"receiptsRoot"`
-	Sealer       string        `json:"sealer"`
-	SealerList   []string      `json:"sealerList"`
-	StateRoot    string        `json:"stateRoot"`
-	Timestamp    string        `json:"timestamp"`
-	Transactions [] BlockTx `json:"transactions"`
-	TransactionsRoot string `json:"transactionsRoot"`
+	DbHash           string        `json:"dbHash"`
+	ExtraData        []interface{} `json:"extraData"`
+	GasLimit         string        `json:"gasLimit"`
+	GasUsed          string        `json:"gasUsed"`
+	Hash             string        `json:"hash"`
+	LogsBloom        string        `json:"logsBloom"`
+	Number           string        `json:"number"`
+	ParentHash       string        `json:"parentHash"`
+	ReceiptsRoot     string        `json:"receiptsRoot"`
+	Sealer           string        `json:"sealer"`
+	SealerList       []string      `json:"sealerList"`
+	StateRoot        string        `json:"stateRoot"`
+	Timestamp        string        `json:"timestamp"`
+	Transactions     []BlockTx     `json:"transactions"`
+	TransactionsRoot string        `json:"transactionsRoot"`
 }
 
 type BlockTx struct {
@@ -99,7 +98,6 @@ type TransactionByHash struct {
 	Value            string `json:"value"`
 }
 
-
 type PeerStatus struct {
 	IPAndPort string        `json:"IPAndPort"`
 	Topic     []interface{} `json:"Topic"`
@@ -117,7 +115,6 @@ type PendingTx struct {
 	Value    string      `json:"value"`
 }
 
-
 type SyncStatus struct {
 	BlockNumber        int    `json:"blockNumber"`
 	GenesisHash        string `json:"genesisHash"`
@@ -130,7 +127,6 @@ type SyncStatus struct {
 	ProtocolID         int    `json:"protocolId"`
 	TxPoolSize         string `json:"txPoolSize"`
 }
-
 
 type Peer struct {
 	BlockNumber int         `json:"blockNumber"`

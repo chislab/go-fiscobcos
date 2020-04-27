@@ -33,7 +33,7 @@ import (
 
 // Client defines typed wrappers for the Bcos RPC API.
 type Client struct {
-	c *rpc.Client
+	c       *rpc.Client
 	GroupId uint64
 }
 
@@ -502,7 +502,8 @@ func (ec *Client) FilterLogs(ctx context.Context, q fiscobcos.FilterQuery) ([]ty
 		}
 		q.ToBlock, _ = ec.BlockNumber(ctx)
 		block, _ = ec.BlockByNumber(ctx, q.ToBlock)
-	} else if q.ToBlock != nil && q.FromBlock != nil {}
+	} else if q.ToBlock != nil && q.FromBlock != nil {
+	}
 	return nil, errors.New("FiscoBcos doesn't provide this function.")
 }
 

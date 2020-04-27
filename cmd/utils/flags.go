@@ -142,4 +142,3 @@ func CheckExclusive(ctx *cli.Context, args ...interface{}) {
 		Fatalf("Flags %v can't be used at the same time", strings.Join(set, ", "))
 	}
 }
-
