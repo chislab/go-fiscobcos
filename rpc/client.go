@@ -281,7 +281,7 @@ func (c *Client) CallContext(ctx context.Context, result interface{}, method str
 	}
 	op := &requestOp{ids: []json.RawMessage{msg.ID}, resp: make(chan *jsonrpcMessage, 1)}
 
-	fmt.Printf("github.com/chislab/go-fiscobcos/rpc/client.go:284 [Raw message]\n %s\n", msg.String())
+	//fmt.Printf("github.com/chislab/go-fiscobcos/rpc/client.go:284 [Raw message]\n %s\n", msg.String())
 
 	if c.isHTTP {
 		err = c.sendHTTP(ctx, op, msg)
