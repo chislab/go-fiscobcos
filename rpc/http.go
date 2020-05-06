@@ -123,7 +123,6 @@ func DialHTTP(endpoint string) (*Client, error) {
 func (c *Client) sendHTTP(ctx context.Context, op *requestOp, msg interface{}) error {
 	hc := c.writeConn.(*httpConn)
 	respBody, err := hc.doRequest(ctx, msg)
-	//fmt.Println("[NEED TO REMOVE]:::", msg)
 	if respBody != nil {
 		defer respBody.Close()
 	}
