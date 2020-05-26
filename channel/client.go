@@ -54,6 +54,8 @@ func NewClient(conf Config) (*Client, error) {
 		exit:   make(chan struct{}),
 	}
 	go cli.readResponse()
+	msg, err := cli.ReadBlockHeight()
+	fmt.Printf("msg: %s\nerror:%v\n", msg, err)
 	return &cli, nil
 }
 
@@ -71,6 +73,16 @@ func (c *Client) Send(typ int, topic string, data interface{}) (string, error) {
 		return "", errors.New("data is not completely written")
 	}
 	return msg.Seq, nil
+}
+
+func (c *Client) ReadBlockHeight() (string, error) {
+	req := make(map[string]interface{})
+	req["jsonrpc"] = "2.0"
+	req["id"] = 1
+	req["method"] = "getBlockNumber"
+	req["params"] = []int{1}
+
+	return c.Send(TypeRPCRequest, "", req)
 }
 
 func (c *Client) readResponse() {
@@ -131,7 +143,7 @@ func (c *Client) readResponse() {
 					}
 				}
 			default:
-				fmt.Printf("other msg 0x%x\n", msg.Type)
+				fmt.Printf("other msg: %s(0x%x)\n", msg.Data, msg.Type)
 			}
 		}
 	}

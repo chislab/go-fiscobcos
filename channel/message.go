@@ -25,15 +25,19 @@ func NewMessage(typ int, topic string, data interface{}) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Message{
-		Length:      uint32(43 + len(topic) + len(d)),
+	msg := &Message{
+		Length:      uint32(42 + len(d)),
 		Type:        uint16(typ),
 		Seq:         newSeq(),
 		TopicLength: byte(len(topic) + 1),
 		Topic:       topic,
 		Result:      0,
 		Data:        d,
-	}, nil
+	}
+	if typ == TypeRegisterEventLog {
+		msg.Length += uint32(1 + len(topic))
+	}
+	return msg, nil
 }
 
 func DecodeMessage(data []byte) (msg Message, err error) {
@@ -78,8 +82,10 @@ func (msg *Message) Encode() []byte {
 	binary.Write(buf, binary.BigEndian, msg.Type)
 	binary.Write(buf, binary.LittleEndian, []byte(msg.Seq))
 	binary.Write(buf, binary.BigEndian, msg.Result)
-	buf.WriteByte(msg.TopicLength)
-	buf.WriteString(msg.Topic)
+	if msg.Type == TypeRegisterEventLog {
+		buf.WriteByte(msg.TopicLength)
+		buf.WriteString(msg.Topic)
+	}
 	binary.Write(buf, binary.LittleEndian, msg.Data)
 	return buf.Bytes()
 }
