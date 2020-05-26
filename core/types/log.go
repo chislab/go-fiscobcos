@@ -55,6 +55,21 @@ type Log struct {
 	Removed bool `json:"removed"`
 }
 
+type EventLogResponse struct {
+	FilterID string     `json:"filterID"`
+	Logs     []Log `json:"logs"`
+	Result   int        `json:"result"`
+}
+
+type RegisterEventLogRequest struct {
+	FromBlock string   `json:"fromBlock"`
+	ToBlock   string   `json:"toBlock"`
+	Addresses []string `json:"addresses"`
+	Topics    []string `json:"topics"`
+	GroupID   string   `json:"groupID"`
+	FilterID  string   `json:"filterID"`
+}
+
 type logMarshaling struct {
 	Data        hexutil.Bytes
 	BlockNumber hexutil.Uint64

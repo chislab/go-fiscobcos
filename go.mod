@@ -6,7 +6,6 @@ require (
 	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
 	github.com/Azure/azure-storage-blob-go v0.7.0
 	github.com/Azure/go-autorest/autorest/adal v0.8.0 // indirect
-	github.com/FISCO-BCOS/crypto v0.0.0-20200202032121-bd8ab0b5d4f1
 	github.com/aristanetworks/goarista v0.0.0-20170210015632-ea17b1a17847
 	github.com/btcsuite/btcd v0.0.0-20171128150713-2e60448ffcc6
 	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea

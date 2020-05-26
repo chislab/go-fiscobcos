@@ -35,6 +35,13 @@ type API struct {
 	Public    bool        // indication if the methods must be considered safe for public use
 }
 
+type ClientConfig struct {
+	CAFile   string
+	CertFile string
+	KeyFile  string
+	Endpoint string
+}
+
 // Error wraps RPC errors, which contain an error code in addition to the message.
 type Error interface {
 	Error() string  // returns the message
