@@ -174,9 +174,8 @@ func DialContext(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	switch u.Scheme {
 	case "http", "https":
 		return DialHTTP(cfg.Endpoint)
-	case "ws", "wss":
-		return DialWebsocket(ctx, cfg.Endpoint, "")
 	case "chan":
+		cfg.Endpoint = u.Host
 		return DialChanWithDialer(ctx, cfg)
 	default:
 		return nil, fmt.Errorf("no known transport for URL scheme %q", u.Scheme)
@@ -468,7 +467,7 @@ func (c *Client) newMessage(method string, paramsIn ...interface{}) (*jsonrpcMes
 func (c *Client) send(ctx context.Context, op *requestOp, msg interface{}) error {
 	select {
 	case c.reqInit <- op:
-		err := c.write(ctx, msg, false)
+		err := c.write(ctx, msg, TypeRPCRequest, false)
 		c.reqSent <- err
 		return err
 	case <-ctx.Done():
@@ -480,18 +479,24 @@ func (c *Client) send(ctx context.Context, op *requestOp, msg interface{}) error
 	}
 }
 
-func (c *Client) write(ctx context.Context, msg interface{}, retry bool) error {
+func (c *Client) write(ctx context.Context, msg interface{}, msgType int, retry bool) error {
 	// The previous write failed. Try to establish a new connection.
 	if c.writeConn == nil {
 		if err := c.reconnect(ctx); err != nil {
 			return err
 		}
 	}
-	err := c.writeConn.writeJSON(ctx, msg)
+	chanMsg, err := NewMessage(msgType, "", msg)
+	if err != nil {
+		return err
+	}
+	msgBytes := chanMsg.Encode()
+	//fmt.Println(string(msgBytes))
+	err = c.writeConn.writeJSON(context.Background(), msgBytes)
 	if err != nil {
 		c.writeConn = nil
 		if !retry {
-			return c.write(ctx, msg, true)
+			return c.write(ctx, msg, msgType, true)
 		}
 	}
 	return err
@@ -553,7 +558,7 @@ func (c *Client) dispatch(codec ServerCodec) {
 		case op := <-c.readOp:
 			if op.batch {
 				conn.handler.handleBatch(op.msgs)
-			} else {
+			} else if op.msgs[0].Result != nil {
 				conn.handler.handleMsg(op.msgs[0])
 			}
 
@@ -620,7 +625,9 @@ func (c *Client) read(codec ServerCodec) {
 	for {
 		msgs, batch, err := codec.readBatch()
 		if _, ok := err.(*json.SyntaxError); ok {
-			codec.writeJSON(context.Background(), errorMessage(&parseError{err.Error()}))
+			//chanMsg, _ := NewMessage(TypeHeartBeat, "", errorMessage(&parseError{err.Error()}))
+			//msgBytes := chanMsg.Encode()
+			//codec.writeJSON(context.Background(), msgBytes)
 		}
 		if err != nil {
 			c.readErr <- err

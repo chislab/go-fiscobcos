@@ -19,6 +19,7 @@ package rpc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -139,6 +140,11 @@ func (h *handler) handleMsg(msg *jsonrpcMessage) {
 		answer := h.handleCallMsg(cp, msg)
 		h.addSubscriptions(cp.notifiers)
 		if answer != nil {
+			//chanMsg, err := NewMessage(TypeHandshake, "", answer)
+			//if err != nil {
+			//	return
+			//}
+			//msgBytes := chanMsg.Encode()
 			h.conn.writeJSON(cp.ctx, answer)
 		}
 		for _, n := range cp.notifiers {
@@ -269,6 +275,7 @@ func (h *handler) handleResponse(msg *jsonrpcMessage) {
 	delete(h.respWait, string(msg.ID))
 	// For normal responses, just forward the reply to Call/BatchCall.
 	if op.sub == nil {
+		fmt.Println(msg.String())
 		op.resp <- msg
 		return
 	}

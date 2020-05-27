@@ -188,19 +188,3 @@ func (bnh *BlockNumberOrHash) Hash() (common.Hash, bool) {
 	}
 	return common.Hash{}, false
 }
-
-func BlockNumberOrHashWithNumber(blockNr BlockNumber) BlockNumberOrHash {
-	return BlockNumberOrHash{
-		BlockNumber:      &blockNr,
-		BlockHash:        nil,
-		RequireCanonical: false,
-	}
-}
-
-func BlockNumberOrHashWithHash(hash common.Hash, canonical bool) BlockNumberOrHash {
-	return BlockNumberOrHash{
-		BlockNumber:      nil,
-		BlockHash:        &hash,
-		RequireCanonical: canonical,
-	}
-}

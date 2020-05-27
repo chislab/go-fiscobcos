@@ -431,9 +431,19 @@ func toBlockNumArg(number *big.Int) string {
 // CodeAt returns the contract code of the given account.
 // The block number can be nil, in which case the code is taken from the latest known block.
 func (ec *Client) CodeAt(ctx context.Context, account common.Address, blockNumber *big.Int) ([]byte, error) {
-	var result hexutil.Bytes
-	err := ec.c.CallContext(ctx, &result, "getCode", ec.GroupId, account, toBlockNumArg(blockNumber))
-	return result, err
+	var hex json.RawMessage
+	err := ec.c.CallContext(ctx, &hex, "getCode", ec.GroupId, account, toBlockNumArg(blockNumber))
+	type CallRet struct {
+		CurrentBlockNumber string `json:"currentBlockNumber"`
+		Output             string `json:"output"`
+		Status             string `json:"status"`
+	}
+	var ret = CallRet{}
+	err = json.Unmarshal(hex, &ret)
+	if err != nil {
+		return hexutil.Decode(string(hex[1:len(hex)-1]))
+	}
+	return hexutil.Decode(ret.Output)
 }
 
 // Contract Calling
@@ -445,12 +455,22 @@ func (ec *Client) CodeAt(ctx context.Context, account common.Address, blockNumbe
 // case the code is taken from the latest known block. Note that state from very old
 // blocks might not be available.
 func (ec *Client) CallContract(ctx context.Context, msg fiscobcos.CallMsg, blockNumber *big.Int) ([]byte, error) {
-	var hex hexutil.Bytes
+	var hex json.RawMessage
 	err := ec.c.CallContext(ctx, &hex, "call", msg.GroupId, toCallArg(msg.Msg))
 	if err != nil {
 		return nil, err
 	}
-	return hex, nil
+	type CallRet struct {
+		CurrentBlockNumber string `json:"currentBlockNumber"`
+		Output             string `json:"output"`
+		Status             string `json:"status"`
+	}
+	var ret = CallRet{}
+	err = json.Unmarshal(hex, &ret)
+	if err != nil {
+		return hexutil.Decode(string(hex[1:len(hex)-1]))
+	}
+	return hexutil.Decode(ret.Output)
 }
 
 // SendTransaction injects a signed transaction into the pending pool for execution.

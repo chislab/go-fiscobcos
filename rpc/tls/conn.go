@@ -10,11 +10,13 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"crypto/subtle"
-	"github.com/chislab/go-fiscobcos/crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/chislab/go-fiscobcos/crypto/x509"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -1443,4 +1445,35 @@ func (c *Conn) VerifyHostname(host string) error {
 
 func (c *Conn) handshakeComplete() bool {
 	return atomic.LoadUint32(&c.handshakeStatus) == 1
+}
+
+// WriteJSON writes the JSON encoding of v as a message.
+//
+// See the documentation for encoding/json Marshal for details about the
+// conversion of Go values to JSON.
+func (c *Conn) WriteBytes(v interface{}) error {
+	if _, ok := v.([]uint8); ok {
+		_, err := c.Write(v.([]byte))
+		return err
+	} else {
+		return nil
+	}
+
+}
+
+// ReadJSON reads the next JSON-encoded message from the connection and stores
+// it in the value pointed to by v.
+//
+// Deprecated: Use c.ReadJSON instead.
+func  (c *Conn) ReadJson(v interface{}) error {
+	ret := make([]byte, len(c.outBuf)*10)
+	_, err := c.Read(ret)
+	start := strings.Index(string(ret), "{")
+	end := strings.LastIndex(string(ret), "}")
+	if start < 0 || end < 0 || start >= end {
+		return nil
+	}
+	//fmt.Println(string(ret[start:end+1]))
+	err = json.Unmarshal(ret[start:end+1], v)
+	return err
 }
