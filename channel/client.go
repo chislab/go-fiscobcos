@@ -54,8 +54,8 @@ func NewClient(conf Config) (*Client, error) {
 		exit:   make(chan struct{}),
 	}
 	go cli.readResponse()
-	msg, err := cli.ReadBlockHeight()
-	fmt.Printf("msg: %s\nerror:%v\n", msg, err)
+	//msg, err := cli.ReadBlockHeight()
+	//fmt.Printf("msg: %s\nerror:%v\n", msg, err)
 	return &cli, nil
 }
 
@@ -143,7 +143,7 @@ func (c *Client) readResponse() {
 					}
 				}
 			default:
-				fmt.Printf("other msg: %s(0x%x)\n", msg.Data, msg.Type)
+				//fmt.Printf("other msg: %s(0x%x)\n", msg.Data, msg.Type)
 			}
 		}
 	}
