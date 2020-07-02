@@ -1,4 +1,4 @@
-package channel
+package client
 
 import (
 	"crypto/rand"

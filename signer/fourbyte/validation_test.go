@@ -39,7 +39,7 @@ func toHexUint(h string) hexutil.Uint64 {
 func dummyTxArgs(t txtestcase) *core.SendTxArgs {
 	to, _ := mixAddr(t.to)
 	from, _ := mixAddr(t.from)
-	n := toHexUint(t.n)
+	//n := toHexUint(t.n)
 	gas := toHexUint(t.g)
 	gasPrice := toHexBig(t.gp)
 	value := toHexBig(t.value)
@@ -56,10 +56,10 @@ func dummyTxArgs(t txtestcase) *core.SendTxArgs {
 
 	}
 	return &core.SendTxArgs{
-		From:     *from,
-		To:       to,
-		Value:    value,
-		Nonce:    n,
+		From:  *from,
+		To:    to,
+		Value: value,
+		//Nonce:    n,
 		GasPrice: gasPrice,
 		Gas:      gas,
 		Data:     data,

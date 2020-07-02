@@ -1,4 +1,4 @@
-package channel
+package client
 
 import (
 	"github.com/chislab/go-fiscobcos/common"

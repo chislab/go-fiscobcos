@@ -1,6 +1,7 @@
-package channel
+package client
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,7 +16,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-type Channel struct {
+type channelClient struct {
 	conn            *tls.Conn
 	buffer          []byte
 	exit            chan struct{}
@@ -25,7 +26,7 @@ type Channel struct {
 	notifyBlockOnce sync.Once
 }
 
-func NewClient(conf Config) (*Channel, error) {
+func newChannel(conf *Config) (*channelClient, error) {
 	caBytes, err := ioutil.ReadFile(conf.CAFile)
 	if err != nil {
 		return nil, err
@@ -51,7 +52,7 @@ func NewClient(conf Config) (*Channel, error) {
 	if err != nil {
 		return nil, err
 	}
-	cli := Channel{
+	cli := channelClient{
 		conn:   conn,
 		buffer: make([]byte, 256*1024),
 		exit:   make(chan struct{}),
@@ -62,7 +63,7 @@ func NewClient(conf Config) (*Channel, error) {
 	return &cli, nil
 }
 
-func (c *Channel) Send(typ int, topic string, data interface{}) (string, error) {
+func (c *channelClient) Send(typ int, topic string, data interface{}) (string, error) {
 	msg, err := NewMessage(typ, topic, data)
 	if err != nil {
 		return "", err
@@ -78,7 +79,7 @@ func (c *Channel) Send(typ int, topic string, data interface{}) (string, error) 
 	return msg.Seq, nil
 }
 
-func (c *Channel) ReadBlockHeight() (string, error) {
+func (c *channelClient) ReadBlockHeight() (string, error) {
 	req := make(map[string]interface{})
 	req["jsonrpc"] = "2.0"
 	req["id"] = 1
@@ -88,7 +89,7 @@ func (c *Channel) ReadBlockHeight() (string, error) {
 	return c.Send(TypeRPCRequest, "", req)
 }
 
-func (c *Channel) readResponse() {
+func (c *channelClient) readResponse() {
 	for {
 		//TODO 有可能阻塞在 c.conn.Read 从而导致不能及时 <-c.exit
 		select {
@@ -176,7 +177,7 @@ func (c *Channel) readResponse() {
 	}
 }
 
-func (c *Channel) SubEventLogs(arg RegisterEventLogRequest) (chan *types.Log, error) {
+func (c *channelClient) SubEventLogs(arg RegisterEventLogRequest) (chan *types.Log, error) {
 	if len(arg.FilterID) != 32 {
 		return nil, errors.New("filterID invalid")
 	}
@@ -199,7 +200,7 @@ func (c *Channel) SubEventLogs(arg RegisterEventLogRequest) (chan *types.Log, er
 	return mch, nil
 }
 
-func (c *Channel) BlockNotify(onBlock OnBlockFunc) error {
+func (c *channelClient) BlockNotify(onBlock OnBlockFunc) error {
 	var err error
 	c.notifyBlockOnce.Do(func() {
 		_, err = c.Send(TypeBlockNotify, "", nil)

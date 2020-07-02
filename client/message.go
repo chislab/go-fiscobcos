@@ -1,14 +1,11 @@
-package channel
+package client
 
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
-
-	jsoniter "github.com/json-iterator/go"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Message struct {
 	Length      uint32
