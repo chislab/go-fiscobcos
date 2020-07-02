@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strconv"
 	"sync"
 
 	"github.com/FISCO-BCOS/crypto/tls"
@@ -15,11 +16,13 @@ import (
 )
 
 type Client struct {
-	conn    *tls.Conn
-	buffer  []byte
-	exit    chan struct{}
-	pending sync.Map
-	watcher sync.Map
+	conn            *tls.Conn
+	buffer          []byte
+	exit            chan struct{}
+	pending         sync.Map
+	watcher         sync.Map
+	onBlock         []OnBlockFunc
+	notifyBlockOnce sync.Once
 }
 
 func NewClient(conf Config) (*Client, error) {
@@ -142,6 +145,30 @@ func (c *Client) readResponse() {
 						}
 					}
 				}
+			case TypeBlockNotify:
+				if len(c.onBlock) == 0 {
+					continue
+				}
+				var blockNotify BlockNotifyResponse
+				if err := json.Unmarshal(msg.Data, &blockNotify); err != nil {
+					fmt.Printf("block notify unmarshal fail %v\n", err)
+					continue
+				}
+				groupID, err := strconv.ParseUint(blockNotify.GroupID, 10, 64)
+				if err != nil {
+					fmt.Printf("block notify parse groupID failed: %s: %v", blockNotify.GroupID, err)
+					continue
+				}
+				blockNumber, err := strconv.ParseUint(blockNotify.BlockNumber, 10, 64)
+				if err != nil {
+					fmt.Printf("block notify parse blockNumber failed: %s: %v", blockNotify.BlockNumber, err)
+					continue
+				}
+				for _, onBlock := range c.onBlock {
+					if onBlock != nil {
+						onBlock(groupID, blockNumber)
+					}
+				}
 			default:
 				//fmt.Printf("other msg: %s(0x%x)\n", msg.Data, msg.Type)
 			}
@@ -170,4 +197,16 @@ func (c *Client) SubEventLogs(arg RegisterEventLogRequest) (chan *types.Log, err
 	mch := make(chan *types.Log)
 	c.watcher.Store(arg.FilterID, mch)
 	return mch, nil
+}
+
+func (c *Client) BlockNotify(onBlock OnBlockFunc) error {
+	var err error
+	c.notifyBlockOnce.Do(func() {
+		_, err = c.Send(TypeBlockNotify, "", nil)
+	})
+	if err != nil {
+		return err
+	}
+	c.onBlock = append(c.onBlock, onBlock)
+	return nil
 }

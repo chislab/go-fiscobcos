@@ -14,6 +14,8 @@ const (
 	TypeEventLog          = 0x1002
 )
 
+type OnBlockFunc func(groupID uint64, blockNumber uint64)
+
 type RegisterEventLogRequest struct {
 	FromBlock string   `json:"fromBlock"`
 	ToBlock   string   `json:"toBlock"`
@@ -54,4 +56,9 @@ type EventLogResponse struct {
 	FilterID string     `json:"filterID"`
 	Logs     []logEntry `json:"logs"`
 	Result   int        `json:"result"`
+}
+
+type BlockNotifyResponse struct {
+	GroupID     string `json:"groupID"`
+	BlockNumber string `json:"blockNumber"`
 }
