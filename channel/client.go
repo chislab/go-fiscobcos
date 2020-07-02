@@ -15,7 +15,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-type Client struct {
+type Channel struct {
 	conn            *tls.Conn
 	buffer          []byte
 	exit            chan struct{}
@@ -25,7 +25,7 @@ type Client struct {
 	notifyBlockOnce sync.Once
 }
 
-func NewClient(conf Config) (*Client, error) {
+func NewClient(conf Config) (*Channel, error) {
 	caBytes, err := ioutil.ReadFile(conf.CAFile)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func NewClient(conf Config) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	cli := Client{
+	cli := Channel{
 		conn:   conn,
 		buffer: make([]byte, 256*1024),
 		exit:   make(chan struct{}),
@@ -62,7 +62,7 @@ func NewClient(conf Config) (*Client, error) {
 	return &cli, nil
 }
 
-func (c *Client) Send(typ int, topic string, data interface{}) (string, error) {
+func (c *Channel) Send(typ int, topic string, data interface{}) (string, error) {
 	msg, err := NewMessage(typ, topic, data)
 	if err != nil {
 		return "", err
@@ -78,7 +78,7 @@ func (c *Client) Send(typ int, topic string, data interface{}) (string, error) {
 	return msg.Seq, nil
 }
 
-func (c *Client) ReadBlockHeight() (string, error) {
+func (c *Channel) ReadBlockHeight() (string, error) {
 	req := make(map[string]interface{})
 	req["jsonrpc"] = "2.0"
 	req["id"] = 1
@@ -88,7 +88,7 @@ func (c *Client) ReadBlockHeight() (string, error) {
 	return c.Send(TypeRPCRequest, "", req)
 }
 
-func (c *Client) readResponse() {
+func (c *Channel) readResponse() {
 	for {
 		//TODO 有可能阻塞在 c.conn.Read 从而导致不能及时 <-c.exit
 		select {
@@ -176,7 +176,7 @@ func (c *Client) readResponse() {
 	}
 }
 
-func (c *Client) SubEventLogs(arg RegisterEventLogRequest) (chan *types.Log, error) {
+func (c *Channel) SubEventLogs(arg RegisterEventLogRequest) (chan *types.Log, error) {
 	if len(arg.FilterID) != 32 {
 		return nil, errors.New("filterID invalid")
 	}
@@ -199,7 +199,7 @@ func (c *Client) SubEventLogs(arg RegisterEventLogRequest) (chan *types.Log, err
 	return mch, nil
 }
 
-func (c *Client) BlockNotify(onBlock OnBlockFunc) error {
+func (c *Channel) BlockNotify(onBlock OnBlockFunc) error {
 	var err error
 	c.notifyBlockOnce.Do(func() {
 		_, err = c.Send(TypeBlockNotify, "", nil)
