@@ -63,6 +63,10 @@ func newChannel(conf *Config) (*channelClient, error) {
 	return &cli, nil
 }
 
+func (c *channelClient) Close() {
+	c.conn.Close()
+}
+
 func (c *channelClient) Send(typ int, topic string, data interface{}) (string, error) {
 	msg, err := NewMessage(typ, topic, data)
 	if err != nil {
