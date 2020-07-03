@@ -6,4 +6,5 @@ type Config struct {
 	KeyFile    string
 	Endpoint   string
 	UseChannel bool
+	GroupID    uint64
 }

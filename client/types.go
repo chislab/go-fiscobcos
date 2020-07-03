@@ -1,6 +1,9 @@
 package client
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/chislab/go-fiscobcos/common"
 )
 
@@ -61,4 +64,68 @@ type EventLogResponse struct {
 type BlockNotifyResponse struct {
 	GroupID     string `json:"groupID"`
 	BlockNumber string `json:"blockNumber"`
+}
+
+// A value of this type can a JSON-RPC request, notification, successful response or
+// error response. Which one it is depends on the fields.
+type jsonrpcMessage struct {
+	Version string          `json:"jsonrpc,omitempty"`
+	ID      json.RawMessage `json:"id,omitempty"`
+	Method  string          `json:"method,omitempty"`
+	Params  json.RawMessage `json:"params,omitempty"`
+	Error   *jsonError      `json:"error,omitempty"`
+	Result  json.RawMessage `json:"result,omitempty"`
+}
+
+type jsonError struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+func (err *jsonError) Error() string {
+	if err.Message == "" {
+		return fmt.Sprintf("json-rpc error %d", err.Code)
+	}
+	return err.Message
+}
+
+func (err *jsonError) ErrorCode() int {
+	return err.Code
+}
+
+type jsonrpcFiscoMsg struct {
+	ID      json.RawMessage `json:"id,omitempty"`
+	Jsonrpc string          `json:"jsonrpc"`
+	Error   *jsonError      `json:"error,omitempty"`
+	Result  struct {
+		CurrentBlockNumber string          `json:"currentBlockNumber,omitempty"`
+		Output             json.RawMessage `json:"output,omitempty"`
+		Status             string          `json:"status,omitempty"`
+		ExtraData          []interface{}   `json:"extraData"`
+		GasLimit           string          `json:"gasLimit"`
+		GasUsed            string          `json:"gasUsed"`
+		Hash               string          `json:"hash"`
+		LogsBloom          string          `json:"logsBloom"`
+		Number             string          `json:"number"`
+		ParentHash         string          `json:"parentHash"`
+		Sealer             string          `json:"sealer"`
+		SealerList         []string        `json:"sealerList"`
+		StateRoot          string          `json:"stateRoot"`
+		Timestamp          string          `json:"timestamp"`
+		Transactions       []struct {
+			BlockHash        string      `json:"blockHash"`
+			BlockNumber      string      `json:"blockNumber"`
+			From             string      `json:"from"`
+			Gas              string      `json:"gas"`
+			GasPrice         string      `json:"gasPrice"`
+			Hash             string      `json:"hash"`
+			Input            string      `json:"input"`
+			Nonce            string      `json:"nonce"`
+			To               interface{} `json:"to"`
+			TransactionIndex string      `json:"transactionIndex"`
+			Value            string      `json:"value"`
+		} `json:"transactions"`
+		TransactionsRoot string `json:"transactionsRoot"`
+	} `json:"result"`
 }

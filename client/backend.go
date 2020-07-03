@@ -1,21 +1,30 @@
 package client
 
 import (
+	"context"
+	"math/big"
+
+	"github.com/chislab/go-fiscobcos"
+	"github.com/chislab/go-fiscobcos/accounts/abi/bind"
+	"github.com/chislab/go-fiscobcos/common"
 	"github.com/chislab/go-fiscobcos/core/types"
 )
 
 type Backend interface {
 	Close()
+	CheckTx(ctx context.Context, tx *types.Transaction) error
 
-	SubEventLogs(arg RegisterEventLogRequest) (chan *types.Log, error)
-
-	// BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error)
-	// ClientVersion(ctx context.Context) (*types.ClientVersion, error)
-	// BlockNumber(ctx context.Context) (*big.Int, error)
-	// SyncStatus(ctx context.Context) (*types.SyncStatus, error)
-	// BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
-	// TotalTransactionCount(ctx context.Context) (*types.TotalTransactionCount, error)
-	// TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
+	ClientVersion(ctx context.Context) (*types.ClientVersion, error)
+	BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error)
+	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
+	CodeAt(ctx context.Context, contract common.Address, blockNumber *big.Int) ([]byte, error)
+	CallContract(ctx context.Context, msg fiscobcos.CallMsg, blockNumber *big.Int) ([]byte, error)
+	BlockNumber(ctx context.Context) (*big.Int, error)
+	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
+	SendTransaction(ctx context.Context, tx *types.Transaction) error
+	FilterLogs(ctx context.Context, query fiscobcos.FilterQuery) ([]types.Log, error)
+	SubscribeFilterLogs(ctx context.Context, query fiscobcos.FilterQuery, ch chan<- types.Log) (fiscobcos.Subscription, error)
+	UpdateBlockLimit(ctx context.Context, opt *bind.TransactOpts) error
 	// TransactionByBlockNumberAndIndex(ctx context.Context, blockNumber string, transactionIndex string) (*types.TransactionByHash, error)
 	// TransactionByBlockHashAndIndex(ctx context.Context, blockHash string, transactionIndex string) (*types.TransactionByHash, error)
 	// TransactionByHash(ctx context.Context, transactionHash string) (*types.TransactionByHash, error)

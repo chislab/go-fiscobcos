@@ -23,8 +23,10 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/chislab/go-fiscobcos"
+	"github.com/chislab/go-fiscobcos/accounts/abi/bind"
 	"github.com/chislab/go-fiscobcos/common"
 	"github.com/chislab/go-fiscobcos/common/hexutil"
 	"github.com/chislab/go-fiscobcos/core/types"
@@ -39,25 +41,57 @@ type rpcClient struct {
 }
 
 // dialRPC connects a client to the given URL.
-func dialRPC(rawurl string) (*rpcClient, error) {
-	return dialRPCContext(context.Background(), rawurl)
+func dialRPC(rawurl string, groupID uint64) (*rpcClient, error) {
+	return dialRPCContext(context.Background(), rawurl, groupID)
 }
 
-func dialRPCContext(ctx context.Context, rawurl string) (*rpcClient, error) {
+func dialRPCContext(ctx context.Context, rawurl string, groupID uint64) (*rpcClient, error) {
 	c, err := rpc.DialContext(ctx, rawurl)
 	if err != nil {
 		return nil, err
 	}
-	return newRPCClient(c), nil
+	return newRPCClient(c, groupID), nil
 }
 
 // newRPCClient creates a client that uses the given RPC client.
-func newRPCClient(c *rpc.Client) *rpcClient {
-	return &rpcClient{c: c, GroupId: 1}
+func newRPCClient(c *rpc.Client, groupID uint64) *rpcClient {
+	return &rpcClient{c: c, GroupId: groupID}
 }
 
 func (ec *rpcClient) Close() {
 	ec.c.Close()
+}
+
+func (c *rpcClient) CheckTx(ctx context.Context, tx *types.Transaction) error {
+	queryTicker := time.NewTicker(time.Second)
+	defer queryTicker.Stop()
+	receipt := new(types.Receipt)
+	var err error
+	for {
+		receipt, err = c.TransactionReceipt(ctx, tx.Hash())
+		if err == nil && receipt != nil {
+			break
+		}
+		// Wait for the next round.
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-queryTicker.C:
+		}
+	}
+	if receipt.Status != "0x0" {
+		return fmt.Errorf("receipt status:%s, tx hash:%s, output:%s", receipt.Status, receipt.TxHash.String(), getReceiptOutput(receipt.Output))
+	}
+	return nil
+}
+
+func (ec *rpcClient) UpdateBlockLimit(ctx context.Context, opt *bind.TransactOpts) error {
+	blkNumber, err := ec.BlockNumber(ctx)
+	if err != nil {
+		return err
+	}
+	opt.BlockLimit = blkNumber.Uint64() + 1000
+	return nil
 }
 
 func (ec *rpcClient) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
