@@ -205,14 +205,6 @@ func (c *BoundContract) RawTransact(opts *TransactOpts, calldata []byte) (*types
 	return c.transact(opts, &c.address, calldata)
 }
 
-// Transfer initiates a plain transaction to move funds to the contract, calling
-// its default method if one is available.
-func (c *BoundContract) Transfer(opts *TransactOpts) (*types.Transaction, error) {
-	// todo(rjl493456442) check the payable fallback or receive is defined
-	// or not, reject invalid transaction at the first place
-	return c.transact(opts, &c.address, nil)
-}
-
 // transact executes an actual transaction invocation, first deriving any missing
 // authorization fields, and then scheduling the transaction for execution.
 func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, input []byte) (*types.Transaction, error) {

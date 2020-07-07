@@ -271,12 +271,6 @@ var (
 		return _{{$contract.Type}}.Contract.{{$contract.Type}}Caller.contract.Call(opts, result, method, params...)
 	}
 
-	// Transfer initiates a plain transaction to move funds to the contract, calling
-	// its default method if one is available.
-	func (_{{$contract.Type}} *{{$contract.Type}}Raw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-		return _{{$contract.Type}}.Contract.{{$contract.Type}}Transactor.contract.Transfer(opts)
-	}
-
 	// Transact invokes the (paid) contract method with params as input values.
 	func (_{{$contract.Type}} *{{$contract.Type}}Raw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 		return _{{$contract.Type}}.Contract.{{$contract.Type}}Transactor.contract.Transact(opts, method, params...)
@@ -292,12 +286,6 @@ var (
 
 	func (_{{$contract.Type}} *{{$contract.Type}}CallerRaw) ReadCall(result interface{}, method string, output []byte) error {
 		return _{{$contract.Type}}.Contract.contract.ReadCall(result, method, output)
-	}
-
-	// Transfer initiates a plain transaction to move funds to the contract, calling
-	// its default method if one is available.
-	func (_{{$contract.Type}} *{{$contract.Type}}TransactorRaw) Transfer(opts *bind.TransactOpts) (*types.Transaction, error) {
-		return _{{$contract.Type}}.Contract.contract.Transfer(opts)
 	}
 
 	// Transact invokes the (paid) contract method with params as input values.
