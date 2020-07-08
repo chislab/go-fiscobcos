@@ -34,7 +34,7 @@ type channelClient struct {
 	onBlock         []OnBlockFunc
 	notifyBlockOnce sync.Once
 	idCounter       uint64
-	rpcResponse     map[string]chan *jsonrpcMessage
+	rpcResponse     map[string]rpcResponse
 	groupID         uint64
 	isClosed        int32
 }
@@ -48,7 +48,7 @@ func newChannel(caFile, certFile, keyFile, endpoint string, groupID uint64) (*ch
 		conn:        conn,
 		buffer:      make([]byte, 256*1024),
 		exit:        make(chan struct{}),
-		rpcResponse: make(map[string]chan *jsonrpcMessage),
+		rpcResponse: make(map[string]rpcResponse),
 		groupID:     groupID,
 	}
 	go cli.readResponse()
@@ -86,7 +86,10 @@ func (c *channelClient) Send(typ int, topic string, data interface{}) (string, e
 
 func (c *channelClient) sendRPC(msg *jsonrpcMessage) (*jsonrpcMessage, error) {
 	ch := make(chan *jsonrpcMessage, 1)
-	c.rpcResponse[string(msg.ID)] = ch
+	c.rpcResponse[string(msg.ID)] = rpcResponse{
+		C:      ch,
+		Method: msg.Method,
+	}
 	defer delete(c.rpcResponse, string(msg.ID))
 	_, err := c.Send(TypeRPCRequest, "", msg)
 	if err != nil {
@@ -171,13 +174,28 @@ func (c *channelClient) readResponse() {
 			}
 			switch msg.Type {
 			case TypeRPCRequest:
-				var respmsg jsonrpcMessage
-				if err = json.Unmarshal(msg.Data, &respmsg); err != nil {
-					fmt.Printf("decode rpc response failed %v\n", err)
+				id := gjson.GetBytes(msg.Data, "id").Raw
+				respBody, ok := c.rpcResponse[id]
+				if !ok {
 					continue
 				}
+				var respmsg jsonrpcMessage
+				if respBody.Method == "call" {
+					var fiscomsg jsonrpcFiscoMsg
+					if err = json.Unmarshal(msg.Data, &fiscomsg); err != nil {
+						continue
+					}
+					respmsg.Version = fiscomsg.Jsonrpc
+					respmsg.ID = fiscomsg.ID
+					respmsg.Result = fiscomsg.Result.Output
+				} else {
+					if err = json.Unmarshal(msg.Data, &respmsg); err != nil {
+						fmt.Printf("decode rpc response failed %v\n", err)
+						continue
+					}
+				}
 				select {
-				case c.rpcResponse[string(respmsg.ID)] <- &respmsg:
+				case c.rpcResponse[id].C <- &respmsg:
 				default:
 				}
 			case TypeRegisterEventLog:

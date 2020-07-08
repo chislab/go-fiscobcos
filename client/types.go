@@ -77,6 +77,11 @@ type jsonrpcMessage struct {
 	Result  json.RawMessage `json:"result,omitempty"`
 }
 
+func (msg *jsonrpcMessage) String() string {
+	b, _ := json.Marshal(msg)
+	return string(b)
+}
+
 type jsonError struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
@@ -128,4 +133,9 @@ type jsonrpcFiscoMsg struct {
 		} `json:"transactions"`
 		TransactionsRoot string `json:"transactionsRoot"`
 	} `json:"result"`
+}
+
+type rpcResponse struct {
+	C      chan *jsonrpcMessage
+	Method string
 }
