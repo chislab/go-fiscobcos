@@ -304,6 +304,125 @@ func (c *channelClient) BlockNumber(ctx context.Context) (*big.Int, error) {
 	return big.NewInt(int64(height)), err
 }
 
+func (c *channelClient) PbftView(ctx context.Context) (string, error) {
+	var result string
+	err := c.rpcCall(ctx, &result, "getPbftView", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) SealerList(ctx context.Context) ([]string, error) {
+	var result []string
+	err := c.rpcCall(ctx, &result, "getSealerList", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) ObserverList(ctx context.Context) ([]string, error) {
+	var result []string
+	err := c.rpcCall(ctx, &result, "getObserverList", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) ConsensusStatus(ctx context.Context) ([]interface{}, error) {
+	var result []interface{}
+	err := c.rpcCall(ctx, &result, "getConsensusStatus", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) SyncStatus(ctx context.Context) (*types.SyncStatus, error) {
+	var result *types.SyncStatus
+	err := c.rpcCall(ctx, &result, "getSyncStatus", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) Peers(ctx context.Context) ([]types.PeerStatus, error) {
+	var result []types.PeerStatus
+	err := c.rpcCall(ctx, &result, "getPeers", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) GroupPeers(ctx context.Context) ([]string, error) {
+	var result []string
+	err := c.rpcCall(ctx, &result, "getGroupPeers", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) NodeIDList(ctx context.Context) ([]string, error) {
+	var result []string
+	err := c.rpcCall(ctx, &result, "getNodeIDList", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) GroupList(ctx context.Context) ([]int64, error) {
+	var result []int64
+	err := c.rpcCall(ctx, &result, "getGroupList", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
+	var result *types.Block
+	err := c.rpcCall(ctx, &result, "getBlockByHash", c.groupID, hash, true)
+	return result, err
+}
+
+func (c *channelClient) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
+	var result *types.Block
+	err := c.rpcCall(ctx, &result, "getBlockByNumber", c.groupID, toBlockNumArg(number), true)
+	return result, err
+}
+func (c *channelClient) BlockHashByNumber(ctx context.Context, blockNumber uint64) (*common.Hash, error) {
+	var result *common.Hash
+	err := c.rpcCall(ctx, &result, "getBlockHashByNumber", c.groupID, string(blockNumber))
+	return result, err
+}
+
+func (c *channelClient) TransactionByHash(ctx context.Context, transactionHash string) (*types.TransactionByHash, error) {
+	var result *types.TransactionByHash
+	err := c.rpcCall(ctx, &result, "getTransactionByHash", c.groupID, transactionHash)
+	return result, err
+}
+
+func (c *channelClient) TransactionByBlockHashAndIndex(ctx context.Context, blockHash string, transactionIndex string) (*types.TransactionByHash, error) {
+	var result *types.TransactionByHash
+	err := c.rpcCall(ctx, &result, "getTransactionByBlockHashAndIndex", c.groupID, blockHash, transactionIndex)
+	return result, err
+}
+
+func (c *channelClient) TransactionByBlockNumberAndIndex(ctx context.Context, blockNumber string, transactionIndex string) (*types.TransactionByHash, error) {
+	var result *types.TransactionByHash
+	err := c.rpcCall(ctx, &result, "getTransactionByBlockNumberAndIndex", c.groupID, blockNumber, transactionIndex)
+	return result, err
+}
+
+func (c *channelClient) PendingTransactions(ctx context.Context) ([]types.PendingTx, error) {
+	var result []types.PendingTx
+	err := c.rpcCall(ctx, &result, "getPendingTransactions", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) PendingTxSize(ctx context.Context) (string, error) {
+	var result string
+	err := c.rpcCall(ctx, &result, "getPendingTxSize", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) Code(ctx context.Context, contract string) (string, error) {
+	var result string
+	err := c.rpcCall(ctx, &result, "getCode", c.groupID, contract)
+	return result, err
+}
+
+func (c *channelClient) TotalTransactionCount(ctx context.Context) (*types.TotalTransactionCount, error) {
+	var result *types.TotalTransactionCount
+	err := c.rpcCall(ctx, &result, "getTotalTransactionCount", c.groupID)
+	return result, err
+}
+
+func (c *channelClient) SystemConfigByKey(ctx context.Context, key string) (string, error) {
+	var result string
+	err := c.rpcCall(ctx, &result, "getSystemConfigByKey", c.groupID, key)
+	return result, err
+}
+
 func (c *channelClient) TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error) {
 	var result *types.Receipt
 	err := c.rpcCall(ctx, &result, "getTransactionReceipt", c.groupID, txHash)
@@ -324,18 +443,6 @@ func (c *channelClient) CallContract(ctx context.Context, msg fiscobcos.CallMsg,
 
 func (c *channelClient) FilterLogs(ctx context.Context, query fiscobcos.FilterQuery) ([]types.Log, error) {
 	return nil, fmt.Errorf("not supported")
-}
-
-func (c *channelClient) BlockByHash(ctx context.Context, hash common.Hash) (*types.Block, error) {
-	var result *types.Block
-	err := c.rpcCall(ctx, &result, "getBlockByHash", c.groupID, hash, true)
-	return result, err
-}
-
-func (c *channelClient) BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error) {
-	var result *types.Block
-	err := c.rpcCall(ctx, &result, "getBlockByNumber", c.groupID, toBlockNumArg(number), true)
-	return result, err
 }
 
 func (c *channelClient) SubscribeFilterLogs(ctx context.Context, query fiscobcos.FilterQuery, ch chan<- types.Log) (fiscobcos.Subscription, error) {
