@@ -129,8 +129,8 @@ type SyncStatus struct {
 }
 
 type Peer struct {
-	BlockNumber int         `json:"blockNumber"`
-	GenesisHash common.Hash `json:"genesisHash"`
-	LatestHash  common.Hash `json:"latestHash"`
-	NodeID      string      `json:"nodeId"`
+	BlockNumber int    `json:"blockNumber"`
+	GenesisHash string `json:"genesisHash"`
+	LatestHash  string `json:"latestHash"`
+	NodeID      string `json:"nodeId"`
 }
