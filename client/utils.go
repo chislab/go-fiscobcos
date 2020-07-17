@@ -2,6 +2,7 @@ package client
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"io"
 	"strings"
@@ -33,4 +34,11 @@ func getReceiptOutput(output string) string {
 		}
 	}
 	return string(b[:tail+1])
+}
+
+func getMessageLength(data []byte) int {
+	if len(data) < 4 {
+		return 0
+	}
+	return int(binary.BigEndian.Uint32(data))
 }

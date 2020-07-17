@@ -51,12 +51,16 @@ func (c *Connection) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Connection) Read(b []byte, ch chan *ReadResult) {
+func (c *Connection) ReadWithChannel(b []byte, ch chan *ReadResult) {
 	cnt, err := c.conn.Read(b)
 	ch <- &ReadResult{
 		Count: cnt,
 		Error: err,
 	}
+}
+
+func (c *Connection) Read(b []byte) (int, error) {
+	return c.conn.Read(b)
 }
 
 func (c *Connection) Write(b []byte) (int, error) {

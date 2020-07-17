@@ -46,7 +46,7 @@ func newChannel(caFile, certFile, keyFile, endpoint string, groupID uint64) (*ch
 	}
 	cli := channelClient{
 		conn:        conn,
-		buffer:      make([]byte, 256*1024),
+		buffer:      make([]byte, 32*1024),
 		exit:        make(chan struct{}),
 		rpcResponse: make(map[string]rpcResponse),
 		groupID:     groupID,
@@ -146,16 +146,17 @@ func (c *channelClient) newRpcMessage(method string, paramsIn ...interface{}) (*
 }
 
 func (c *channelClient) readResponse() {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
 	readCh := make(chan *tls.ReadResult, 8)
 	for {
-		go c.conn.Read(c.buffer, readCh)
+		go c.conn.ReadWithChannel(c.buffer, readCh)
 		select {
 		case <-c.exit:
 			return
 		case readResult := <-readCh:
 			cnt, err := readResult.Count, readResult.Error
 			if err != nil {
-				ticker := time.NewTicker(1 * time.Second)
 				for err != nil {
 					select {
 					case <-c.exit:
@@ -167,7 +168,22 @@ func (c *channelClient) readResponse() {
 				}
 				continue
 			}
-			msg, err := DecodeMessage(c.buffer[:cnt])
+			var msg Message
+			totalLen := getMessageLength(c.buffer[:cnt])
+			if totalLen > cnt {
+				all := make([]byte, 0, cnt*5)
+				all = append(all, c.buffer[:cnt]...)
+				for len(all) < totalLen {
+					cnt, err := c.conn.Read(c.buffer)
+					if err != nil {
+						break
+					}
+					all = append(all, c.buffer[:cnt]...)
+				}
+				msg, err = DecodeMessage(all)
+			} else {
+				msg, err = DecodeMessage(c.buffer[:cnt])
+			}
 			if err != nil {
 				fmt.Printf("decode message error %v\n", err)
 				continue
