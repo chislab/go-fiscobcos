@@ -1,14 +1,11 @@
-package channel
+package client
 
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
-
-	jsoniter "github.com/json-iterator/go"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Message struct {
 	Length      uint32
@@ -46,7 +43,7 @@ func DecodeMessage(data []byte) (msg Message, err error) {
 		return
 	}
 	if uint32(len(data)) < msg.Length {
-		return msg, errors.New("uncomplete message")
+		return msg, errors.New("incomplete message")
 	}
 	if err = binary.Read(buf, binary.BigEndian, &msg.Type); err != nil {
 		return
