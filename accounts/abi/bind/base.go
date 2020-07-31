@@ -215,9 +215,8 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	if value == nil {
 		value = new(big.Int)
 	}
-	if opts.BlockLimit == 0 {
-		return nil, errors.New("Block limit shoud be preseted.")
-	}
+	lmt, _ := c.transactor.BlockNumber(context.Background())
+	opts.BlockLimit = lmt.Uint64() + 200
 	var nonce *big.Int
 	for nonce == nil {
 		b, _ := rlp.EncodeToBytes(uuid.NewUUID())

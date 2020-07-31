@@ -69,6 +69,7 @@ type PendingContractCaller interface {
 type ContractTransactor interface {
 	TransactionReceipt(ctx context.Context, txHash common.Hash) (*types.Receipt, error)
 	SendTransaction(ctx context.Context, tx *types.Transaction) error
+	BlockNumber(ctx context.Context) (*big.Int, error)
 }
 
 // ContractFilterer defines the methods needed to access log events using one-off
