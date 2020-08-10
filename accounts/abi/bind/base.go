@@ -118,6 +118,8 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
+	lmt, _ := c.transactor.BlockNumber(context.Background())
+	opts.BlockLimit = lmt.Uint64() + 200
 	var nonce *big.Int
 	for nonce == nil {
 		b, _ := rlp.EncodeToBytes(uuid.NewUUID())
