@@ -12,6 +12,7 @@ import (
 
 type Backend interface {
 	Close()
+	CheckReceipt(ctx context.Context, tx *types.Transaction) (*types.Receipt, error)
 	CheckTx(ctx context.Context, tx *types.Transaction) error
 
 	ClientVersion(ctx context.Context) (*types.ClientVersion, error)

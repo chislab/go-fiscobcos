@@ -62,11 +62,9 @@ func (ec *rpcClient) Close() {
 	ec.c.Close()
 }
 
-func (c *rpcClient) CheckTx(ctx context.Context, tx *types.Transaction) error {
+func (c *rpcClient) CheckReceipt(ctx context.Context, tx *types.Transaction) (receipt *types.Receipt, err error) {
 	queryTicker := time.NewTicker(time.Second)
 	defer queryTicker.Stop()
-	receipt := new(types.Receipt)
-	var err error
 	for {
 		receipt, err = c.TransactionReceipt(ctx, tx.Hash())
 		if err == nil && receipt != nil {
@@ -75,14 +73,21 @@ func (c *rpcClient) CheckTx(ctx context.Context, tx *types.Transaction) error {
 		// Wait for the next round.
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			err = ctx.Err()
+			return
 		case <-queryTicker.C:
 		}
 	}
 	if receipt.Status != "0x0" {
-		return fmt.Errorf("receipt status:%s, tx hash:%s, output:%s", receipt.Status, receipt.TxHash.String(), getReceiptOutput(receipt.Output))
+		err = fmt.Errorf("receipt status:%s, tx hash:%s, output:%s", receipt.Status, receipt.TxHash.String(), getReceiptOutput(receipt.Output))
+		return
 	}
-	return nil
+	return
+}
+
+func (c *rpcClient) CheckTx(ctx context.Context, tx *types.Transaction) error {
+	_, err := c.CheckReceipt(ctx, tx)
+	return err
 }
 
 func (ec *rpcClient) UpdateBlockLimit(ctx context.Context, opt *bind.TransactOpts) error {
