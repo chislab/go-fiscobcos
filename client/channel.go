@@ -149,11 +149,17 @@ func (c *channelClient) readResponse() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	readCh := make(chan *tls.ReadResult, 8)
+	heartbeatTicker := time.NewTicker(25 * time.Second)
+	defer heartbeatTicker.Stop()
 	for {
 		go c.conn.ReadWithChannel(c.buffer, readCh)
 		select {
 		case <-c.exit:
 			return
+		case <-heartbeatTicker.C:
+			c.Send(TypeHeartBeat, "", map[string]string{
+				"heartbeat": "0",
+			})
 		case readResult := <-readCh:
 			cnt, err := readResult.Count, readResult.Error
 			if err != nil {
@@ -162,12 +168,13 @@ func (c *channelClient) readResponse() {
 					case <-c.exit:
 						return
 					case <-ticker.C:
-						fmt.Printf("block chain connection error: %v, reconnecting...", err)
+						fmt.Printf("block chain connection error: %v, reconnecting...\n", err)
 						err = c.conn.Reconnecte()
 					}
 				}
 				continue
 			}
+			heartbeatTicker.Reset(25 * time.Second)
 			var msg Message
 			totalLen := getMessageLength(c.buffer[:cnt])
 			if totalLen > cnt {
@@ -281,11 +288,9 @@ func (c *channelClient) readResponse() {
 	}
 }
 
-func (c *channelClient) CheckTx(ctx context.Context, tx *types.Transaction) error {
+func (c *channelClient) CheckReceipt(ctx context.Context, tx *types.Transaction) (receipt *types.Receipt, err error) {
 	queryTicker := time.NewTicker(time.Second)
 	defer queryTicker.Stop()
-	receipt := new(types.Receipt)
-	var err error
 	for {
 		receipt, err = c.TransactionReceipt(ctx, tx.Hash())
 		if err == nil && receipt != nil {
@@ -294,14 +299,21 @@ func (c *channelClient) CheckTx(ctx context.Context, tx *types.Transaction) erro
 		// Wait for the next round.
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			err = ctx.Err()
+			return
 		case <-queryTicker.C:
 		}
 	}
 	if receipt.Status != "0x0" {
-		return fmt.Errorf("receipt status:%s, tx hash:%s, output:%s", receipt.Status, receipt.TxHash.String(), getReceiptOutput(receipt.Output))
+		err = fmt.Errorf("receipt status:%s, tx hash:%s, output:%s", receipt.Status, receipt.TxHash.String(), getReceiptOutput(receipt.Output))
+		return
 	}
-	return nil
+	return
+}
+
+func (c *channelClient) CheckTx(ctx context.Context, tx *types.Transaction) error {
+	_, err := c.CheckReceipt(ctx, tx)
+	return err
 }
 
 func (c *channelClient) ClientVersion(ctx context.Context) (*types.ClientVersion, error) {
