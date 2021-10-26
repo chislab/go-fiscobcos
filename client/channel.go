@@ -34,7 +34,7 @@ type channelClient struct {
 	onBlock         []OnBlockFunc
 	notifyBlockOnce sync.Once
 	idCounter       uint64
-	rpcResponse     map[string]rpcResponse
+	rpcResponse     sync.Map
 	groupID         uint64
 	isClosed        int32
 }
@@ -45,13 +45,13 @@ func newChannel(caFile, certFile, keyFile, endpoint string, groupID uint64) (*ch
 		return nil, err
 	}
 	cli := channelClient{
-		conn:        conn,
-		buffer:      make([]byte, 32*1024),
-		exit:        make(chan struct{}),
-		rpcResponse: make(map[string]rpcResponse),
-		groupID:     groupID,
+		conn:    conn,
+		buffer:  make([]byte, 32*1024),
+		exit:    make(chan struct{}),
+		groupID: groupID,
 	}
 	go cli.readResponse()
+	go cli.heartbeat()
 	//msg, err := cli.ReadBlockHeight()
 	//fmt.Printf("msg: %s\nerror:%v\n", msg, err)
 	return &cli, nil
@@ -63,6 +63,17 @@ func (c *channelClient) Close() {
 	}
 	c.conn.Close()
 	c.exit <- struct{}{}
+}
+
+func (c *channelClient) heartbeat() {
+	heartbeatTicker := time.NewTicker(25 * time.Second)
+	defer heartbeatTicker.Stop()
+	for {
+		<-heartbeatTicker.C
+		c.Send(TypeHeartBeat, "", map[string]string{
+			"heartbeat": "0",
+		})
+	}
 }
 
 func (c *channelClient) Send(typ int, topic string, data interface{}) (string, error) {
@@ -86,11 +97,11 @@ func (c *channelClient) Send(typ int, topic string, data interface{}) (string, e
 
 func (c *channelClient) sendRPC(msg *jsonrpcMessage) (*jsonrpcMessage, error) {
 	ch := make(chan *jsonrpcMessage, 1)
-	c.rpcResponse[string(msg.ID)] = rpcResponse{
+	c.rpcResponse.Store(string(msg.ID), rpcResponse{
 		C:      ch,
 		Method: msg.Method,
-	}
-	defer delete(c.rpcResponse, string(msg.ID))
+	})
+	defer c.rpcResponse.Delete(string(msg.ID))
 	_, err := c.Send(TypeRPCRequest, "", msg)
 	if err != nil {
 		return nil, err
@@ -149,17 +160,11 @@ func (c *channelClient) readResponse() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	readCh := make(chan *tls.ReadResult, 8)
-	heartbeatTicker := time.NewTicker(25 * time.Second)
-	defer heartbeatTicker.Stop()
 	for {
 		go c.conn.ReadWithChannel(c.buffer, readCh)
 		select {
 		case <-c.exit:
 			return
-		case <-heartbeatTicker.C:
-			c.Send(TypeHeartBeat, "", map[string]string{
-				"heartbeat": "0",
-			})
 		case readResult := <-readCh:
 			cnt, err := readResult.Count, readResult.Error
 			if err != nil {
@@ -174,7 +179,6 @@ func (c *channelClient) readResponse() {
 				}
 				continue
 			}
-			heartbeatTicker.Reset(25 * time.Second)
 			var msg Message
 			totalLen := getMessageLength(c.buffer[:cnt])
 			if totalLen > cnt {
@@ -198,7 +202,11 @@ func (c *channelClient) readResponse() {
 			switch msg.Type {
 			case TypeRPCRequest:
 				id := gjson.GetBytes(msg.Data, "id").Raw
-				respBody, ok := c.rpcResponse[id]
+				respItf, ok := c.rpcResponse.Load(id)
+				if !ok {
+					continue
+				}
+				respBody, ok := respItf.(rpcResponse)
 				if !ok {
 					continue
 				}
@@ -218,7 +226,7 @@ func (c *channelClient) readResponse() {
 					}
 				}
 				select {
-				case c.rpcResponse[id].C <- &respmsg:
+				case respBody.C <- &respmsg:
 				default:
 				}
 			case TypeRegisterEventLog:
@@ -289,6 +297,9 @@ func (c *channelClient) readResponse() {
 }
 
 func (c *channelClient) CheckReceipt(ctx context.Context, tx *types.Transaction) (receipt *types.Receipt, err error) {
+	if tx == nil {
+		return nil, fmt.Errorf("tx is nil")
+	}
 	queryTicker := time.NewTicker(time.Second)
 	defer queryTicker.Stop()
 	for {

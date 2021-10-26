@@ -21,11 +21,12 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"math/big"
+	"time"
+
 	"github.com/chislab/go-fiscobcos/common/hexutil"
 	"github.com/chislab/go-fiscobcos/rlp"
 	"github.com/pborman/uuid"
-	"math/big"
-	"time"
 
 	"github.com/chislab/go-fiscobcos"
 	"github.com/chislab/go-fiscobcos/accounts/abi"
@@ -118,7 +119,10 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	if err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	lmt, _ := c.transactor.BlockNumber(context.Background())
+	lmt, err := c.transactor.BlockNumber(context.Background())
+	if err != nil {
+		return common.Address{}, nil, nil, fmt.Errorf("GetBlockNumber: %w", err)
+	}
 	opts.BlockLimit = lmt.Uint64() + 200
 	var nonce *big.Int
 	for nonce == nil {
@@ -139,13 +143,19 @@ func DeployContract(opts *TransactOpts, abi abi.ABI, bytecode []byte, backend Co
 	if err = backend.SendTransaction(opts.Context, signedTx); err != nil {
 		return common.Address{}, nil, nil, err
 	}
-	time.Sleep(time.Second * 1)
-	receipt, err := backend.TransactionReceipt(opts.Context, signedTx.Hash())
-	if err != nil || receipt == nil {
-		return common.Address{}, nil, nil, err
+	for i := 0; i < 10; i++ {
+		time.Sleep(500 * time.Millisecond)
+		receipt, err := backend.TransactionReceipt(opts.Context, signedTx.Hash())
+		if err != nil {
+			return common.Address{}, nil, nil, err
+		}
+		if receipt == nil {
+			continue
+		}
+		c = NewBoundContract(receipt.ContractAddress, abi, backend, backend, backend)
+		return c.address, signedTx, c, nil
 	}
-	c = NewBoundContract(receipt.ContractAddress, abi, backend, backend, backend)
-	return c.address, signedTx, c, nil
+	return common.Address{}, nil, nil, fmt.Errorf("deploy timeout")
 }
 
 // Call invokes the (constant) contract method with params as input values and
@@ -217,7 +227,10 @@ func (c *BoundContract) transact(opts *TransactOpts, contract *common.Address, i
 	if value == nil {
 		value = new(big.Int)
 	}
-	lmt, _ := c.transactor.BlockNumber(context.Background())
+	lmt, err := c.transactor.BlockNumber(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("GetBlockNumber: %w", err)
+	}
 	opts.BlockLimit = lmt.Uint64() + 200
 	var nonce *big.Int
 	for nonce == nil {
